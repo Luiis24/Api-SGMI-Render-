@@ -1,0 +1,32 @@
+
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:create": "cross-env DB_USER=postgres DB_NAME=gestion_de_mantenimiento psql -U $DB_USER -d $DB_NAME -a -f ../Base/gestion_de_mantenimiento.sql",
+    "db:seed": "node seed.js",
+    "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.4",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "fetch": "^1.1.0",
+    "js-yaml": "^4.1.0",
+    "node": "^21.6.2",
+    "pg": "^8.11.3",
+    "swagger-ui-express": "^5.0.0",
+    "cross-env": "^7.0.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
