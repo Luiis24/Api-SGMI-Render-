@@ -1,9 +1,9 @@
  const CONFIG_BD ={
-user: 'postgres',
+user: 'sweetmym_sgmi',
 host: 'localhost',
-database: 'gestion_de_mantenimiento',
-password: '123',
-port: 5432
+database: ' sweetmym_gestion_de_mantenimiento',
+password: 'hi5YwkC5QS2XgKQ',
+port: 3307
 }
 
 module.exports = {
