@@ -26,6 +26,7 @@ router.get('/getUltimosEstados', dataController.getUltimosEstados);
 
 router.post('/crearMaquina',dataController.crearMaquina);
 router.get('/getMaquinas',dataController.getMaquinas);
+router.post('/actualizarMaquina',dataController.actualizarMaquina);
 
 router.post('/crearTipoMaquina', dataController.crearTipoMaquina);
 router.get('/tipoMaquinas', dataController.getTipoMaquinas);
