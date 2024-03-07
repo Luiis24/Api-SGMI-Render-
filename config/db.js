@@ -1,9 +1,9 @@
  const CONFIG_BD ={
-user: 'sweetmym_sgmi',
-host: 'localhost',
-database: ' sweetmym_gestion_de_mantenimiento',
-password: 'hi5YwkC5QS2XgKQ',
-port: 3307
+user: 'postgres',
+host: 'viaduct.proxy.rlwy.net',
+database: 'railway',
+password: 'ebeabBdaBaE2bEdB41AGFg2e1B**5d45',
+port: 49025
 }
 
 module.exports = {
