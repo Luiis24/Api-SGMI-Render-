@@ -1,5 +1,5 @@
  const CONFIG_BD ={
-user: 'postgres',
+user: 'luis',
 host: 'dpg-cnjabjicn0vc73c07jtg-a',
 database: 'gestion_de_mantenimiento',
 password: 'jDeSoRo9dbkrwTENMtDcoMXm6rGY6siF',
