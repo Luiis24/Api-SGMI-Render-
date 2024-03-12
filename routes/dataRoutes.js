@@ -8,6 +8,8 @@ router.get('/instructores', dataController.getInstructores);
 router.post('/login', dataController.login);
 
 router.post('/registerAprendiz', dataController.registerAprendiz);
+router.post('/actualizarAprendiz', dataController.actualizarAprendiz);
+router.post('/actualizarFicha', dataController.actualizarFicha);
 router.get('/aprendices', dataController.getAprendices);
 
 router.post('/registerHojaInspeccion', dataController.registerHojaInspeccion);
@@ -30,12 +32,16 @@ router.post('/actualizarMaquina',dataController.actualizarMaquina);
 
 router.post('/crearTipoMaquina', dataController.crearTipoMaquina);
 router.get('/tipoMaquinas', dataController.getTipoMaquinas);
+router.post('/actualizarTipoMaquina',dataController.actualizarTipoMaquina);
 
 router.get('/ordenDeTrabajo/:id_maquina', dataController.getOrdenTrabajoById);
 router.get('/checklist/:id_maquina', dataController.getOrdenTrabajoById);
 router.get('/hojaVida/:id_maquina', dataController.getHojaVidaById);
 
-router.post('/registerOrdenTrabajo', dataController.registerOrdenTrabajo); //no va
+router.post('/registerOrdenTrabajo', dataController.registerOrdenTrabajo);
+router.post('/registerInsumosUtilizados', dataController.registerInsumosUtilizados);
+router.post('/getInsumosUtilizados', dataController.getInsumosUtilizados);
+router.post('/getInsumosUtilizadosAlmacen', dataController.getInsumosUtilizadosAlmacen);
 router.get('/insumos', dataController.getInsumos); //no va
 
 router.post('/crearCaracteristicasMotor',dataController.crearCaracteristicasMotor);
@@ -108,14 +114,20 @@ const {
 
   // Insumos:
 
-router.post('/RegistrarInsumo', dataController.RegistrarInsumo)
-router.get('/GetInsumos', dataController.GetInsumos)
+router.post('/RegistrarInsumo', dataController.RegistrarInsumo);
+router.post('/SalidaInsumo', dataController.actualizarSalidaInsumo);
+router.get('/GetInsumos', dataController.GetInsumos);
 
 router.post('/UsarInsumo/:id_insumo', dataController.UsarInsumo);
 
 router.get('/GetInsumoById/:id_insumo', dataController.getInsumoById);
 
 router.post('/DevolverInsumo/:id', dataController.devolverInsumo);
+
+// router.get('/insumosADevolver', dataController.insumosADevolver);
+router.get('/componentesAAlertar', dataController.componentesAAlertar);
+
+
 
 
 module.exports = router;
