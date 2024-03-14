@@ -105,9 +105,9 @@ const loginInstructor = (req, res) => {
 
 const registerAprendiz = (req, res) => {
   console.log(req.body);
-  const { tipo_doc_aprendiz, num_doc_aprendiz, ficha_aprendiz, programa_aprendiz, nombre_aprendiz, email_aprendiz, telefono_aprendiz, equipo_aprendiz, password_aprendiz, estado } = req.body;
+  const { tipo_doc_aprendiz, num_doc_aprendiz, ficha_aprendiz, programa_aprendiz, nombre_aprendiz, email_aprendiz, telefono_aprendiz, equipo_aprendiz, password_aprendiz, id_instructor, estado } = req.body;
 
-  if (!tipo_doc_aprendiz || !num_doc_aprendiz || !ficha_aprendiz || !programa_aprendiz || !nombre_aprendiz || !email_aprendiz || !telefono_aprendiz || !equipo_aprendiz || !password_aprendiz) {
+  if (!tipo_doc_aprendiz || !num_doc_aprendiz || !ficha_aprendiz || !programa_aprendiz || !nombre_aprendiz || !email_aprendiz || !telefono_aprendiz || !equipo_aprendiz || !password_aprendiz || !id_instructor) {
     return res.status(400).json({ error: 'Falta información requerida' });
   }
 
@@ -142,8 +142,8 @@ const registerAprendiz = (req, res) => {
 
       // Si no hay conflictos, proceder con la inserción
       pool.query(
-        'INSERT INTO aprendices (tipo_doc_aprendiz, num_doc_aprendiz, ficha_aprendiz, programa_aprendiz, nombre_aprendiz, email_aprendiz, telefono_aprendiz, equipo_aprendiz, password_aprendiz, estado) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-        [tipo_doc_aprendiz, num_doc_aprendiz, ficha_aprendiz, programa_aprendiz, nombre_aprendiz, email_aprendiz, telefono_aprendiz_num, equipo_aprendiz, password_aprendiz, estado],
+        'INSERT INTO aprendices (tipo_doc_aprendiz, num_doc_aprendiz, ficha_aprendiz, programa_aprendiz, nombre_aprendiz, email_aprendiz, telefono_aprendiz, equipo_aprendiz, password_aprendiz, id_instructor, estado) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+        [tipo_doc_aprendiz, num_doc_aprendiz, ficha_aprendiz, programa_aprendiz, nombre_aprendiz, email_aprendiz, telefono_aprendiz_num, equipo_aprendiz, password_aprendiz, id_instructor, estado],
         (error) => {
           if (error) {
             console.error('Error al insertar el Aprendiz en la base de datos', error);
@@ -353,7 +353,7 @@ const getComponenteChecklist = (req, res) => {
 
 const registerChecklist = async (req, res) => {
   try {
-    const { id_maquina, fecha, hora_inicio, hora_fin, estadosComponentes, ficha_aprendiz, operario, num_doc_aprendiz, programa_aprendiz, equipo_aprendiz } = req.body;
+    const { id_maquina, fecha, hora_inicio, hora_fin, estadosComponentes, ficha_aprendiz, operario, num_doc_aprendiz, programa_aprendiz, equipo_aprendiz, observacion } = req.body;
 
     // console.log('Datos recibidos en el controlador:', {
     //   id_maquina,
@@ -378,8 +378,8 @@ const registerChecklist = async (req, res) => {
 
     // Construir la consulta SQL para insertar en la tabla checklist
     const query = `
-      INSERT INTO checklist (id_maquina, num_inspeccion, fecha, hora_inicio, hora_fin, estado_componente, id_componente, ficha_aprendiz, operario, num_doc_aprendiz, programa_aprendiz, equipo_aprendiz)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO checklist (id_maquina, num_inspeccion, fecha, hora_inicio, hora_fin, estado_componente, id_componente, ficha_aprendiz, operario, num_doc_aprendiz, programa_aprendiz, equipo_aprendiz, observacion)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     `;
 
     // Ejecutar la consulta para cada estadoComponente
@@ -396,7 +396,8 @@ const registerChecklist = async (req, res) => {
         operario,
         num_doc_aprendiz,
         programa_aprendiz,
-        equipo_aprendiz
+        equipo_aprendiz,
+        observacion
       ];
       console.log(values)
 
@@ -1019,7 +1020,7 @@ const getHistorialReparacionesById = async (id_maquina) => {
 // Ordenes de trabajo (Get)
 
 const GetOrdenesTrabajo = async (req, res) => {
-  pool.query('SELECT orden_de_trabajo.*, maquinas.nombre_maquina FROM orden_de_trabajo JOIN maquinas ON orden_de_trabajo.id_maquina = maquinas.id_maquina;', (error, result) => {
+  pool.query('SELECT orden_de_trabajo.*, maquinas.nombre_maquina FROM orden_de_trabajo JOIN maquinas ON orden_de_trabajo.id_maquina = maquinas.id_maquina ORDER BY orden_de_trabajo.fecha_fin_ot DESC;', (error, result) => {
     if (error) {
       console.error('Error al consultar la base de datos', error);
       return res.status(500).json({ error: 'Error al obtener la lista de ordenes de trabajo' });
@@ -1216,8 +1217,9 @@ const devolverInsumo = async (req, res) => {
       return res.status(400).json({ message: 'La cantidad ingresada supera la cantidad en uso' });
     }
 
+    const cantidad_final = cantidadEnUso - cantidad
     // Realizar la devolución de insumo
-    await pool.query('UPDATE insumos SET insumos_en_uso = $1 nota_insumo = $2 WHERE id_insumos = $3', [cantidadEnUso - cantidad, nota, id]);
+    await pool.query('UPDATE insumos SET insumos_en_uso = $1, nota_insumo = $2 WHERE id_insumos = $3', [cantidad_final, nota, id]);
 
     res.status(200).json({ message: 'Insumo devuelto exitosamente' });
   } catch (error) {
@@ -1286,7 +1288,7 @@ const getHistorialRegistros = async (req, res) => {
 
   try {
     const response = await pool.query(
-      'SELECT * FROM checklist WHERE id_maquina = $1 ORDER BY num_inspeccion DESC',
+      'SELECT * FROM checklist WHERE id_maquina = $1 ORDER BY num_inspeccion DESC LIMIT 50',
       [idMaquina]
     );
 
@@ -1415,8 +1417,36 @@ const actualizarSalidaInsumo = async (req, res) => {
     const updatedQuantity = currentInsumo.rows[0].cantidad_insumo - cantidad_insumo;
 
     await pool.query(
-      "UPDATE insumos SET cantidad_insumo = $1 nota_insumo = $2 WHERE id_insumos = $3;",
+      "UPDATE insumos SET cantidad_insumo = $1, nota_insumo = $2 WHERE id_insumos = $3;",
       [updatedQuantity, nota, id_insumo]
+    );
+
+    res.status(200).json({ message: "Cantidad de insumo actualizada" });
+  } catch (error) {
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
+const actualizarSalidaInsumoEnUso = async (req, res) => {
+  const { id_insumo, cantidad_insumo, nota } = req.body;
+  try {
+
+    const currentInsumo = await pool.query(
+      "SELECT cantidad_insumo, insumos_en_uso FROM insumos WHERE id_insumos = $1",
+      [id_insumo]
+    );
+
+    // Asegurar que el insumo exista
+    if (currentInsumo.rows.length === 0) {
+      return res.status(404).json({ message: "Insumo no encontrado" });
+    }
+
+    // Calcular que cantidad queda
+    const updatedQuantity = currentInsumo.rows[0].cantidad_insumo - cantidad_insumo;
+    const updatedInsumosEnUso = currentInsumo.rows[0].insumos_en_uso - cantidad_insumo
+    await pool.query(
+      "UPDATE insumos SET cantidad_insumo = $1, insumos_en_uso = $2, nota_insumo = $3 WHERE id_insumos = $4;",
+      [updatedQuantity, updatedInsumosEnUso, nota, id_insumo]
     );
 
     res.status(200).json({ message: "Cantidad de insumo actualizada" });
@@ -1510,6 +1540,7 @@ module.exports = {
   getInsumosUtilizadosAlmacen,
   // insumosADevolver,
   actualizarSalidaInsumo,
+  actualizarSalidaInsumoEnUso,
   componentesAAlertar
 };
 

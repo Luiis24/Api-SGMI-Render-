@@ -117,6 +117,7 @@ const {
 router.post('/RegistrarInsumo', dataController.RegistrarInsumo);
 router.post('/SalidaInsumo', dataController.actualizarSalidaInsumo);
 router.get('/GetInsumos', dataController.GetInsumos);
+router.post('/SalidaInsumoEnUso', dataController.actualizarSalidaInsumoEnUso);
 
 router.post('/UsarInsumo/:id_insumo', dataController.UsarInsumo);
 
