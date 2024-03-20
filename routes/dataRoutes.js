@@ -4,6 +4,7 @@ const dataController = require('../controllers/dataControllers');
 
 router.post('/registerInstructor', dataController.registerInstructor);
 router.get('/instructores', dataController.getInstructores);
+router.post('/actualizarInstructor', dataController.actualizarInstructor);
 
 router.post('/login', dataController.login);
 
@@ -60,6 +61,7 @@ router.get('/GetCaracteristicasMaquina', dataController.GetCaracteristicasMaquin
 // informes
 router.get('/getOrdenesTrabajo', dataController.GetOrdenesTrabajo);
 router.post('/getOrdenTrabajo', dataController.GetOrdenTrabajo);
+router.post('/terminarOrdenTrabajo', dataController.actualizarOrdenTrabajo);
 
 //Ultima maquina:
 router.get('/ultimaMaquina', dataController.ultimaMaquina)
