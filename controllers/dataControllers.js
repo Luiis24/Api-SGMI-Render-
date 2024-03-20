@@ -6,7 +6,6 @@ const pool = new Pool(CONFIG_BD)
 
 
 
-
 // Instructor
 
 // Registrar Un Instructor (Post):
