@@ -6,6 +6,7 @@ const pool = new Pool(CONFIG_BD)
 
 
 
+
 // Instructor
 
 // Registrar Un Instructor (Post):
@@ -596,16 +597,28 @@ const getInsumosUtilizados = (req, res) => {
 }
 
 const getInsumosUtilizadosAlmacen = (req, res) => {
-  const {id_insumo} = req.body
-  pool.query('SELECT * FROM insumos_usados_ot WHERE id_insumos = $1 AND id_orden_de_trabajo IN (SELECT id_orden_de_trabajo FROM orden_de_trabajo WHERE fecha_fin_ot > CURRENT_DATE)', [id_insumo], (error, results) => {
-    if (error) {
-      console.error('Error al obtener los insumos utilizados', error);
-      return res.status(500).json({ error: 'Error al obtener los insumos utilizados' });
-    }
+  const { id_insumo } = req.body;
+  const currentDate = new Date();
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // Agregar ceros a la izquierda si es necesario
+  const day = String(currentDate.getDate()).padStart(2, '0'); // Agregar ceros a la izquierda si es necesario
+  const currentDateString = `${year}-${month}-${day}`;
+  const currentTimeString = currentDate.toTimeString().split(' ')[0]; // Obtener la hora actual en formato 'HH:MM:SS'
 
-    res.status(200).json(results.rows);
-  });
-}
+  pool.query(
+    'SELECT * FROM insumos_usados_ot WHERE id_insumos = $1 AND id_orden_de_trabajo IN (SELECT id_orden_de_trabajo FROM orden_de_trabajo WHERE fecha_fin_ot >= $2 AND hora_fin_ot < $3)',
+    [id_insumo, currentDateString, currentTimeString],
+    (error, results) => {
+      if (error) {
+        console.error('Error al obtener los insumos utilizados', error);
+        return res.status(500).json({ error: 'Error al obtener los insumos utilizados' });
+      }
+
+      res.status(200).json(results.rows);
+    }
+  );
+};
+
 
 
 // obtener checklist por maquina
@@ -1582,4 +1595,3 @@ module.exports = {
   actualizarOrdenTrabajo,
   actualizarInstructor
 };
-
