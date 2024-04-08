@@ -3,15 +3,12 @@ const { CONFIG_BD } = require('../config/db');
 const { rows } = require('pg/lib/defaults');
 const express = require('express');
 const pool = new Pool(CONFIG_BD)
-
-
-
+const bcryptjs = require('bcryptjs');
 
 // Instructor
-
 // Registrar Un Instructor (Post):
 
-const registerInstructor = (req, res) => {
+const registerInstructor = async (req, res) => {
   console.log(req.body);
   const { cc_instructor, nombre_instructor, email_instructor, telefono_instructor, password_instructor, estado } = req.body;
 
@@ -33,6 +30,8 @@ const registerInstructor = (req, res) => {
 
   // Convertir telefono_instructor a número entero
   const telefono_instructor_num = parseInt(telefono_instructor, 10);
+  // Encriptar contraseña
+  let passwordHash = await bcryptjs.hash(password_instructor, 8)
 
   pool.query('SELECT * FROM instructores WHERE cc_instructor = $1 OR telefono_instructor = $2 OR email_instructor = $3', [cc_instructor, telefono_instructor_num, email_instructor], (error, result) => {
     if (error) {
@@ -44,7 +43,7 @@ const registerInstructor = (req, res) => {
       return res.status(409).json({ error: 'El Instructor ya existe' });
     }
 
-    pool.query('INSERT INTO instructores (cc_instructor, nombre_instructor, email_instructor, telefono_instructor, password_instructor, estado) VALUES ($1, $2, $3, $4, $5, $6)', [cc_instructor, nombre_instructor, email_instructor, telefono_instructor_num, password_instructor, estado], (error) => {
+    pool.query('INSERT INTO instructores (cc_instructor, nombre_instructor, email_instructor, telefono_instructor, password_instructor, estado) VALUES ($1, $2, $3, $4, $5, $6)', [cc_instructor, nombre_instructor, email_instructor, telefono_instructor_num, passwordHash, estado], (error) => {
       if (error) {
         console.error('Error al insertar el Instructor en la base de datos', error);
         return res.status(500).json({ error: 'Error al registrar el Instructor' });
@@ -70,40 +69,12 @@ const getInstructores = (req, res) => {
 };
 
 
-
-// Iniciar Sesion Instructor
-
-const loginInstructor = (req, res) => {
-  const { cc_instructor, password_instructor } = req.body;
-
-  if (!cc_instructor || !password_instructor) {
-    return res.status(400).json({ error: 'Falta información requerida' });
-  }
-
-  pool.query('SELECT * FROM instructores WHERE cc_instructor = $1 AND password_instructor = $2', [cc_instructor, password_instructor], (error, result) => {
-    if (error) {
-      console.error('Error al consultar la base de datos', error);
-      return res.status(500).json({ error: 'Error al intentar iniciar sesión de instructor' });
-    }
-
-    if (result.rows.length === 0) {
-      return res.status(401).json({ message: 'Credenciales incorrectas' });
-    }
-
-    res.status(200).json({ message: 'Inicio de sesión exitoso' });
-  });
-};
-
-
-
-
-
 // Aprendiz
 
 // Registrar Un Aprendiz (Post):
 
 
-const registerAprendiz = (req, res) => {
+const registerAprendiz = async(req, res) => {
   console.log(req.body);
   const { tipo_doc_aprendiz, num_doc_aprendiz, ficha_aprendiz, programa_aprendiz, nombre_aprendiz, email_aprendiz, telefono_aprendiz, equipo_aprendiz, password_aprendiz, id_instructor, estado } = req.body;
 
@@ -125,6 +96,8 @@ const registerAprendiz = (req, res) => {
 
   // Convertir telefono_aprendiz a número entero
   const telefono_aprendiz_num = parseInt(telefono_aprendiz, 10);
+  // Encriptar contraseña
+  let passwordHash = await bcryptjs.hash(password_aprendiz, 8)
 
   // Consultar si ya existe un aprendiz con el mismo número de documento, email o teléfono
   pool.query(
@@ -143,7 +116,7 @@ const registerAprendiz = (req, res) => {
       // Si no hay conflictos, proceder con la inserción
       pool.query(
         'INSERT INTO aprendices (tipo_doc_aprendiz, num_doc_aprendiz, ficha_aprendiz, programa_aprendiz, nombre_aprendiz, email_aprendiz, telefono_aprendiz, equipo_aprendiz, password_aprendiz, id_instructor, estado) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
-        [tipo_doc_aprendiz, num_doc_aprendiz, ficha_aprendiz, programa_aprendiz, nombre_aprendiz, email_aprendiz, telefono_aprendiz_num, equipo_aprendiz, password_aprendiz, id_instructor, estado],
+        [tipo_doc_aprendiz, num_doc_aprendiz, ficha_aprendiz, programa_aprendiz, nombre_aprendiz, email_aprendiz, telefono_aprendiz_num, equipo_aprendiz, passwordHash, id_instructor, estado],
         (error) => {
           if (error) {
             console.error('Error al insertar el Aprendiz en la base de datos', error);
@@ -169,38 +142,6 @@ const getAprendices = (req, res) => {
 
     res.status(200).json(result.rows);
   });
-};
-
-
-
-// Iniciar sesion aprendiz:
-
-const loginAprendiz = (req, res) => {
-  const { num_doc_aprendiz, password_aprendiz } = req.body;
-
-  if (!num_doc_aprendiz || !password_aprendiz) {
-    return res.status(400).json({ error: 'Falta información requerida de Aprendiz' });
-  }
-
-  // Consultar si existe un aprendiz con el número de documento y contraseña proporcionados
-  pool.query(
-    'SELECT * FROM aprendices WHERE num_doc_aprendiz = $1 AND password_aprendiz = $2',
-    [num_doc_aprendiz, password_aprendiz],
-    (error, result) => {
-      if (error) {
-        console.error('Error al consultar la base de datos', error);
-        return res.status(500).json({ error: 'Error en el servidor de Aprendiz' });
-      }
-
-      if (result.rows.length === 1) {
-        // Inicio de sesión exitoso
-        return res.status(200).json({ message: 'Inicio de sesión exitoso' });
-      } else {
-        // Credenciales inválidas
-        return res.status(401).json({ error: 'Credenciales inválidas de Aprendiz' });
-      }
-    }
-  );
 };
 
 
@@ -544,8 +485,8 @@ const registerOrdenTrabajo = (req, res) => {
         return res.status(500).json({ error: 'Error al registrar la orden detrabajo' });
       }
 
-       // Después de insertar los datos, realizar una consulta para obtener el id_orden_de_trabajo
-       pool.query(
+      // Después de insertar los datos, realizar una consulta para obtener el id_orden_de_trabajo
+      pool.query(
         'SELECT id_orden_de_trabajo FROM public.orden_de_trabajo WHERE fecha_inicio_ot = $1 AND hora_inicio_ot = $2 AND descripcion_de_trabajo = $3',
         [fecha_inicio_ot, hora_inicio_ot, descripcion_de_trabajo],
         (error, result) => {
@@ -554,9 +495,9 @@ const registerOrdenTrabajo = (req, res) => {
             return res.status(500).json({ error: 'Error al obtener el id_orden_de_trabajo' });
           }
 
-        const id_orden_de_trabajo = result.rows[0].id_orden_de_trabajo;
+          const id_orden_de_trabajo = result.rows[0].id_orden_de_trabajo;
 
-      res.status(201).json({ message: 'Orden de trabajo registrado exitosamente', id_orden_de_trabajo });
+          res.status(201).json({ message: 'Orden de trabajo registrado exitosamente', id_orden_de_trabajo });
         });
     }
   );
@@ -585,7 +526,7 @@ const registerInsumosUtilizados = (req, res) => {
 // get insumos utilizados
 
 const getInsumosUtilizados = (req, res) => {
-  const {id_orden_de_trabajo} = req.body
+  const { id_orden_de_trabajo } = req.body
   pool.query('SELECT * FROM insumos_usados_ot WHERE id_orden_de_trabajo = $1', [id_orden_de_trabajo], (error, results) => {
     if (error) {
       console.error('Error al obtener los insumos utilizados', error);
@@ -673,27 +614,27 @@ const crearTipoMaquina = async (req, res) => {
     return res.status(400).json({ error: 'Falta información requerida' });
   }
 
-  try{
-  const existeTipoMaquina = await pool.query(
-    'SELECT * FROM tipo_maquina WHERE nombre_tipo_maquina = $1',
-    [nombre_tipo_maquina]
-  );
+  try {
+    const existeTipoMaquina = await pool.query(
+      'SELECT * FROM tipo_maquina WHERE nombre_tipo_maquina = $1',
+      [nombre_tipo_maquina]
+    );
 
-  if (existeTipoMaquina.rows.length > 0) {
-    // Si ya existe un tipo de máquina con el mismo nombre, devolver un error
-    return res.status(400).json({ error: 'Ya existe un tipo de máquina con el mismo nombre' });
-  }
+    if (existeTipoMaquina.rows.length > 0) {
+      // Si ya existe un tipo de máquina con el mismo nombre, devolver un error
+      return res.status(400).json({ error: 'Ya existe un tipo de máquina con el mismo nombre' });
+    }
 
-  await pool.query(
-    'INSERT INTO tipo_maquina (nombre_tipo_maquina, descripcion_tipo_maquina) VALUES ($1, $2)',
-    [nombre_tipo_maquina, descripcion_tipo_maquina]
+    await pool.query(
+      'INSERT INTO tipo_maquina (nombre_tipo_maquina, descripcion_tipo_maquina) VALUES ($1, $2)',
+      [nombre_tipo_maquina, descripcion_tipo_maquina]
     );
 
     res.status(201).json({ message: 'Tipo de máquina registrado exitosamente' });
-} catch(error){
-  console.error('Error al insertar el tipo de máquina en la base de datos', error);
-  return res.status(500).json({ error: 'Error al registrar el tipo de máquina' });
-}
+  } catch (error) {
+    console.error('Error al insertar el tipo de máquina en la base de datos', error);
+    return res.status(500).json({ error: 'Error al registrar el tipo de máquina' });
+  }
 };
 
 
@@ -732,38 +673,54 @@ const crearMaquina = async (req, res) => {
 
 // login de aprendiz e instructor
 
-const login = (req, res) => {
+const login = async (req, res) => {
   const { nId, password } = req.body;
-  const estado = 'activo'
+  const estado = 'activo';
 
   if (!nId || !password) {
     return res.status(400).json({ error: 'Falta información requerida' });
   }
 
   pool.query(
-    'SELECT * FROM aprendices WHERE num_doc_aprendiz = $1 AND password_aprendiz = $2 AND estado = $3',
-    [nId, password, estado],
-    (error, aprendizResult) => {
+    'SELECT * FROM aprendices WHERE num_doc_aprendiz = $1 AND estado = $2',
+    [nId, estado],
+    async (error, aprendizResult) => {
       if (error) {
         console.error('Error al consultar la base de datos', error);
         return res.status(500).json({ error: 'Error en el servidor' });
       }
 
       if (aprendizResult.rows.length === 1) {
-        return res.status(200).json(aprendizResult.rows[0]);
+        const aprendiz = aprendizResult.rows[0];
+        // Compara la contraseña proporcionada con la contraseña almacenada en la base de datos
+        const passwordMatch = await bcryptjs.compare(password, aprendiz.password_aprendiz);
+        if (passwordMatch) {
+          // Si las contraseñas coinciden, devuelve el usuario
+          return res.status(200).json(aprendiz);
+        } else {
+          return res.status(401).json({ error: 'Credenciales inválidas' });
+        }
       }
 
       pool.query(
-        'SELECT * FROM instructores WHERE cc_instructor = $1 AND password_instructor = $2',
-        [nId, password],
-        (error, instructorResult) => {
+        'SELECT * FROM instructores WHERE cc_instructor = $1 AND estado = $2',
+        [nId, estado],
+        async (error, instructorResult) => {
           if (error) {
             console.error('Error al consultar la base de datos', error);
             return res.status(500).json({ error: 'Error en el servidor' });
           }
 
           if (instructorResult.rows.length === 1) {
-            return res.status(200).json(instructorResult.rows[0]);
+            const instructor = instructorResult.rows[0];
+            // Compara la contraseña proporcionada con la contraseña almacenada en la base de datos
+            const passwordMatch = await bcryptjs.compare(password, instructor.password_instructor);
+            if (passwordMatch) {
+              // Si las contraseñas coinciden, devuelve el usuario
+              return res.status(200).json(instructor);
+            } else {
+              return res.status(401).json({ error: 'Credenciales inválidas' });
+            }
           }
 
           return res.status(401).json({ error: 'Credenciales inválidas' });
@@ -1315,7 +1272,7 @@ const getHistorialRegistros = async (req, res) => {
 // actualizar informacion maquina
 
 const actualizarMaquina = async (req, res) => {
-  const { id_maquina, nombre_maquina, manual_maquina} = req.body;
+  const { id_maquina, nombre_maquina, manual_maquina } = req.body;
   try {
     const result = await pool.query(
       "SELECT * FROM maquinas WHERE id_maquina = $1",
@@ -1340,7 +1297,7 @@ const actualizarMaquina = async (req, res) => {
 // actualizar informacion tipo maquina
 
 const actualizarTipoMaquina = async (req, res) => {
-  const { id_tipo_maquina, nombre_tipo_maquina, descripcion_tipo_maquina} = req.body;
+  const { id_tipo_maquina, nombre_tipo_maquina, descripcion_tipo_maquina } = req.body;
   try {
     const result = await pool.query(
       "SELECT * FROM tipo_maquina WHERE id_tipo_maquina = $1",
@@ -1364,7 +1321,7 @@ const actualizarTipoMaquina = async (req, res) => {
 
 // actualizar estado de aprendiz
 const actualizarAprendiz = async (req, res) => {
-  const { aprendizSelected, estado} = req.body;
+  const { aprendizSelected, estado } = req.body;
   try {
     const result = await pool.query(
       "SELECT * FROM aprendices WHERE id_aprendiz = $1",
@@ -1388,7 +1345,7 @@ const actualizarAprendiz = async (req, res) => {
 
 // actualizar estado de ficha
 const actualizarFicha = async (req, res) => {
-  const { ficha_aprendiz, estado} = req.body;
+  const { ficha_aprendiz, estado } = req.body;
   try {
     const result = await pool.query(
       "SELECT * FROM aprendices WHERE ficha_aprendiz = $1",
@@ -1485,8 +1442,8 @@ const componentesAAlertar = async (req, res) => {
       "SELECT c.*, m.*, cc.* FROM checklist c INNER JOIN ( SELECT id_maquina, MAX(num_inspeccion) AS max_num_inspeccion FROM checklist GROUP BY id_maquina ) t ON c.id_maquina = t.id_maquina AND c.num_inspeccion = t.max_num_inspeccion INNER JOIN maquinas m ON c.id_maquina = m.id_maquina INNER JOIN componentes_checklist cc ON c.id_componente = cc.id_componente WHERE c.estado_componente = 'alertar'"
     )
     res.status(200).json(result.rows)
-  } catch(error){
-    res.status(500).json({message: "Error en la base de datos"})
+  } catch (error) {
+    res.status(500).json({ message: "Error en la base de datos" })
   }
 }
 
@@ -1506,7 +1463,7 @@ const actualizarOrdenTrabajo = async (req, res) => {
 
 // actualizar estado de instructor
 const actualizarInstructor = async (req, res) => {
-  const { instructorSelected, estado} = req.body;
+  const { instructorSelected, estado } = req.body;
   try {
     const result = await pool.query(
       "SELECT * FROM instructores WHERE id_instructor = $1",
@@ -1532,10 +1489,8 @@ const actualizarInstructor = async (req, res) => {
 module.exports = {
   registerInstructor,
   getInstructores,
-  loginInstructor,
   registerAprendiz,
   getAprendices,
-  loginAprendiz,
   registerHojaInspeccion,
   registerComponenteChecklist,
   getComponenteChecklist,
